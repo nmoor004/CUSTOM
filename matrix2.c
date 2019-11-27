@@ -56,20 +56,23 @@ void TimerSet(unsigned long M) {
 }
 
 
+///////////////MATRIX SCHEMATICS
+
+
 
 
 ///////////RIGHT INPUTS w/ luckylight label facing towards top of board portb
-//BIT 0 = ROW 1
-//BIT 1 = ROW 2
-//BIT 2 = COL 7
-//BIT 3 = ROW 8
-//BIT 4 = COL 5
-//BIT 5 = ROW 3
-//BIT 6 = COL 8
-//BIT 7 = ROW 5
+//BIT 0 = ROW 1 
+//BIT 1 = ROW 2 
+//BIT 2 = COL 7 
+//BIT 3 = ROW 8 
+//BIT 4 = COL 5	
+//BIT 5 = ROW 3 
+//BIT 6 = COL 8 
+//BIT 7 = ROW 5 
 
 
-////////////LEFT INPUTS portd
+////////////LEFT INPUTS has label on side with Luckylight facing top of board portd
 //BIT 0 = COL 2
 //BIT 1 = ROW 7
 //BIT 2 = ROW 6
@@ -98,7 +101,8 @@ void TimerSet(unsigned long M) {
    BIT 3 = COL 4 (old dBIT 7)
    BIT 4 = COL 5 (old bBIT 4)
    BIT 5 = COL 6 (old dBIT 6)
-   BIT 6
+   BIT 6 = COL 7 (old bBIT 2)
+   BIT 7 = COL 8 (old bBIT 6)
 
 
 */
