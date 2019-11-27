@@ -93,12 +93,17 @@ int main(void) {
     while (1) {	
 	PORTC = PORTC << 1;
 	PORTD = PORTD << 1;
+	PORTB = PORTB << 1;
 	if (PORTC == 0x00) {
 		PORTC = 0x01;
+	}
+	if (PORTB == 0x00) {
+		PORTB = 0x01;
 	}
 	if (PORTD == 0x00) {
 		PORTD = 0x01;
 	}
+
 
 	while (!TimerFlag);
 	TimerFlag = 0;
