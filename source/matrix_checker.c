@@ -5,10 +5,9 @@
 #include "simAVRHeader.h"
 #endif
 
-
-  /////////////////////////////////////////////////////////////////////////////////////////
- ////////////////////////////////-----------TIMER-----------//////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////
+////////////////TIMER FUNCTIONS
+//////////////////////////////////////////////////
 
 volatile unsigned char TimerFlag = 0; // TimerISR() sets this to 1. C Programmer should clear to 0.
 unsigned long _avr_timer_M = 1;	       // Start count from here, down to 0. Default 1 ms.
@@ -58,70 +57,6 @@ void TimerSet(unsigned long M) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-  /////////////////////////////////////////////////////////////////////////////////////////
- //////////////////////////////-----------JOYSTICK-----------/////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-
-
-uint16_t x, y;
-unsigned char xData, yData;
-
-
-
-void InitADC(void)
-{
-	ADMUX|=(1<<REFS0);
-	ADCSRA|=(1<<ADEN)|(1<<ADPS0)|(1<<ADPS1)|(1<<ADPS2); //ENABLE ADC, PRESCALER 128
-}
-
-uint16_t readadc(uint8_t ch)
-{
-	ch&=0b00000111;         //ANDing to limit input to 7
-	ADMUX = (ADMUX & 0xf8)|ch;  //Clear last 3 bits of ADMUX, OR with ch
-	ADCSRA|=(1<<ADSC);        //START CONVERSION
-	while((ADCSRA)&(1<<ADSC));    //WAIT UNTIL CONVERSION IS COMPLETE
-	return(ADC);        //RETURN ADC VALUE
-}
-
-
-
-
-
-  /////////////////////////////////////////////////////////////////////////////////////////
- //////////////////////////////----------GAME LOGIC---------//////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-
-int GameBoard[8][8] = {0};
-
-enum Game_States {} game_state;
-
-void gameTick() {
-	
-	
-}
-
-
-  /////////////////////////////////////////////////////////////////////////////////////////
- ////////////////////////////----------BOARD RENDERING---------///////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-
-enum Render_States {} render_state;
-
-
-void renderTick() {
-	
-	
-}
 
 ///////////////MATRIX SCHEMATICS
 
@@ -179,12 +114,25 @@ int main(void) {
 	DDRB = 0xFF; PORTB = 0x00; //OUTPUT
 	DDRD = 0xFF; PORTD = 0x00; //OUTPUT
 	DDRC = 0xFF; PORTC = 0x00;
-	DDRA = 0x00; PORTA = 0xFF;
 	TimerSet(1000);
 	TimerOn();
-
-
+    /* Insert your solution below */
+	PORTC = 0x01;
+	PORTB = 0x01;
+	PORTD = 0x01;
     while (1) {	
+	PORTC = PORTC << 1;
+	PORTD = PORTD << 1;
+	PORTB = PORTB << 1;
+	if (PORTC == 0x00) {
+		PORTC = 0x01;
+	}
+	if (PORTB == 0x00) {
+		PORTB = 0x01;
+	}
+	if (PORTD == 0x00) {
+		PORTD = 0x01;
+	}
 
 
 	while (!TimerFlag);
