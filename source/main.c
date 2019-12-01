@@ -58,18 +58,23 @@ void TimerSet(unsigned long M) {
 
 
 
+///////////////MATRIX SCHEMATICS
+
+
+
+
 ///////////RIGHT INPUTS w/ luckylight label facing towards top of board portb
-//BIT 0 = ROW 1
-//BIT 1 = ROW 2
-//BIT 2 = COL 7
-//BIT 3 = ROW 8
-//BIT 4 = COL 5
-//BIT 5 = ROW 3
-//BIT 6 = COL 8
-//BIT 7 = ROW 5
+//BIT 0 = ROW 1 
+//BIT 1 = ROW 2 
+//BIT 2 = COL 7 
+//BIT 3 = ROW 8 
+//BIT 4 = COL 5	
+//BIT 5 = ROW 3 
+//BIT 6 = COL 8 
+//BIT 7 = ROW 5 
 
 
-////////////LEFT INPUTS portd
+////////////LEFT INPUTS has label on side with Luckylight facing top of board portd
 //BIT 0 = COL 2
 //BIT 1 = ROW 7
 //BIT 2 = ROW 6
@@ -78,6 +83,31 @@ void TimerSet(unsigned long M) {
 //BIT 5 = COL 3
 //BIT 6 = COL 6
 //BIT 7 =  COL 4
+
+
+//NEW WIRING SCHEME
+/* - ROWS (PORTB)
+   BIT 0 = ROW 1
+   BIT 1 = ROW 2
+   BIT 2 = ROW 3 (old bBIT 5)
+   BIT 3 = ROW 4 (old dBIT 4)
+   BIT 4 = ROW 5 (old bBIT 7)
+   BIT 5 = ROW 6 (old dBIT 2)
+   BIT 6 = ROW 7 (old dBIT 1)
+   BIT 7 = ROW 8 (old bBIT 3)
+ 
+- COLS (PORTD) 
+   BIT 0 = COL 1 (old dBIT 3)
+   BIT 1 = COL 2 (old dBIT 0)
+   BIT 2 = COL 3 (old dBIT 5)
+   BIT 3 = COL 4 (old dBIT 7)
+   BIT 4 = COL 5 (old bBIT 4)
+   BIT 5 = COL 6 (old dBIT 6)
+   BIT 6 = COL 7 (old bBIT 2)
+   BIT 7 = COL 8 (old bBIT 6)
+
+
+*/
 
 int main(void) {
     /* Insert DDR and PORT initializations */
