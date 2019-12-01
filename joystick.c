@@ -25,15 +25,15 @@ unsigned short count = 0x00;
 void TimerOn() {
 	// AVR timer/counter controller register TCCR1
 	TCCR1B = 0x0B;     // bit3 = 0: CTC mode (clear timer on compare)
-		          // bit2bit1bit0 = 011: pre-scaler /64
-			 // 00001011: 0x0B
-			// SO, 8 MHz clock or 8,000,000 / 64 = 125,000 ticks/s
-		       // Thus, TCNT1 register will count at 125,000 tick/s
+	// bit2bit1bit0 = 011: pre-scaler /64
+	// 00001011: 0x0B
+	// SO, 8 MHz clock or 8,000,000 / 64 = 125,000 ticks/s
+	// Thus, TCNT1 register will count at 125,000 tick/s
 	// AVR output compare register OCR1A.
 	OCR1A = 125;    // Timer interrupt will be generated when TCNT1==OCR1A
-		       // We want a 1 ms tick. 0.001s * 125,000 ticks/s = 125
-		      // So when TCNT1 register equals 125,
-		     // 1 ms has passed. Thus, we compare to 125.
+	// We want a 1 ms tick. 0.001s * 125,000 ticks/s = 125
+	// So when TCNT1 register equals 125,
+	// 1 ms has passed. Thus, we compare to 125.
 	// AVR timer interrupt mask register
 	TIMSK1 = 0x02; // bit1: OCIE1A -- enables compare match interrupt
 	// Initialize avr counter
@@ -94,42 +94,42 @@ uint16_t readadc(uint8_t ch)
 
 
 
-unsigned char D0 = 0x01;
-unsigned char D1 = 0x02;
 unsigned char LEDCombo = 0x00;
 enum X_States {xinit, xidle, xtoggleD0} xstate;
 
 void Xtick() {
 
 	switch(xstate) {
-		case xinit: 
+		case xinit:
 			x = 0;
 
 			xData = 0;
 			xstate = xidle;
-			PORTC = 0x03;
-			break;
+			PORTC = 0;
+		break;
 		case xidle:
-			PORTC = 0x01;
-			if (x > 900) {
+			PORTC &= 0xFD;
+			PORTC |= 0x01;
+			if (x > 700) {
 				xstate = xtoggleD0;
 			}
 			
 			
-			break;
+		break;
 		case xtoggleD0:
-			PORTC = 0x02;
+		PORTC &=0xFE;
+		PORTC |= 0x02;
 			if (xData == 0) {
-				PORTD |= D0;
+				LEDCombo |= 0x40;
 				xData = 1;
 				xstate = xidle;
 			}
 			else if (xData == 1){
-				PORTD &= 0xFE;
+				LEDCombo &= 0xBF;
 				xData = 0;
 				xstate = xidle;
-			}
-			break;
+				}
+		break;
 	}
 
 
@@ -141,35 +141,35 @@ enum Y_States {yinit, yidle, ytoggleD1} ystate;
 void Ytick() {
 
 	switch(ystate) {
-		case yinit: 
-			
+		case yinit:
 			y = 0;
-			
 			yData = 0;
 			ystate = yidle;
-			PORTC = 0x03;
-			break;
+			PORTC = 0;
+		break;
 		case yidle:
-			PORTC = 0x01;
-			if (y > 900) {
+			PORTC &= 0xF7;
+			PORTC |= 0x04;
+			if (y > 700) {
 				ystate = ytoggleD1;
 			}
 			
 			
-			break;
+		break;
 		case ytoggleD1:
-			PORTC = 0x02;
+			PORTC &=0xFB;
+			PORTC |= 0x08;
 			if (yData == 0) {
-				PORTD |= D1;
+				LEDCombo |= 0x80;
 				yData = 1;
 				ystate = yidle;
 			}
 			else if (yData == 1){
-				PORTD &= 0xFD;
+				LEDCombo &= 0x7F;
 				yData = 0;
 				ystate = yidle;
-			}
-			break;
+				}
+		break;
 	}
 
 
@@ -177,27 +177,59 @@ void Ytick() {
 }
 
 
+enum Combine_States {cinit, ccombine} combine_state;
+
+void combineTick() {
+	switch(combine_state) {
+		
+		case cinit: 
+			LEDCombo = 0;
+			combine_state = ccombine;
+		break;
+		case ccombine:
+			PORTC |= LEDCombo;
+			if (yData == 0) {
+				PORTC &= 0x7F;
+			}
+			if (xData == 0) {
+				PORTC &= 0xBF;
+				
+			}
+			combine_state = ccombine;
+		break;
+		
+		
+		
+	}
+	
+	
+	
+	
+	
+	
+}
 int main(void) {
-    /* Insert DDR and PORT initializations */
+	/* Insert DDR and PORT initializations */
 	DDRA = 0x00; PORTA = 0xFF; // JOYSTICK INPUT
-	DDRD = 0xFF; DDRD = 0x00; // LED OUTPUT
 	DDRC = 0xFF; PORTC = 0x00; //STATE OUTPUT
 	ystate = yinit;
-	xstate = xinit;	
+	xstate = xinit;
+	combine_state = cinit;
 	TimerSet(200);
 	TimerOn();
 	InitADC();
 	//unsigned short UD, LR;
-    /* Insert your solution below */
-    while (1) {
-	x = readadc(0); //Read A0
-	y = readadc(1); //Read A1
+	/* Insert your solution below */
+	while (1) {
+		x = readadc(0); //Read A0
+		y = readadc(1); //Read A1
 
-	Xtick();
-	Ytick();
-	while (!TimerFlag);
-	TimerFlag = 0;
+		Xtick();
+		Ytick();
+		combineTick();
+		while (!TimerFlag);
+		TimerFlag = 0;
 
-    }
-    return 1;
+	}
+	return 1;
 }
