@@ -2,8 +2,6 @@
 #include <avr/interrupt.h>
 
 
-void MATRIX();
-
 
   /////////////////////////////////////////////////////////////////////////////////////////
  ////////////////////////////////-----------TIMER-----------//////////////////////////////
@@ -56,57 +54,10 @@ void TimerSet(unsigned long M) {
 }
 
 
-
-
-
-
-/*
-
-struct bullet {
-	char x; //X & Y start from 0 for array access
-	char y;
-	char start;
-	char direction; // 0 up, 1 down, 2 left, 3 right
-
-};
-
-bullet A;
-
-bullet bulletArray[1] = {A};
-
-int bulletCount = 0;
-enum Bullet_States {idle, move} bullet_state;
-
-
-
-void bulletTick() {
-		switch(bullet_state) {
-			case idle:
-				break;
-			case move:
-				break;
-			
-			
-		}
-		
-		switch(bullet_state) {
-			case idle:
-				break;
-			case move:
-				break;
-			
-		}
-}
-
-*/
-
-
-
-
 enum Render_States {init, draw} render_state;
-char rowArray[6] = {0b00000001, 0b00000010, 0b00000100}; //0b00100000, 0b00010000, 0b00001000, 0b00000100}; 
-char colArray[6] = {0b00000001, 0b00000001, 0b00000001}; //0b00100000, 0b00010000, 0b00001000, 0b00000100};
-
+char rowArray[6] = {0b00000001, 0b00000010, 0b00000100};
+char colArray[6] = {0b00000001, 0b00000010, 0b00000100};
+int i = 0;
 
 void renderTick() {
 	switch(render_state) {
@@ -114,12 +65,15 @@ void renderTick() {
 			render_state = draw;
 			break;
 		case draw: //Draw the board by getting data from bullets & player
-				MATRIX();
 				
-			
+				PORTB = rowArray[i];
+				PORTD = ~colArray[i];
+				i++;
+				if (i == 3) {
+					i = 0;
+				}
 			break;
-		
-		
+			
 	}
 	
 	
@@ -130,7 +84,7 @@ int main(void) {
 	DDRD = 0xFF; PORTD = 0x00;
 	DDRB = 0xFF; PORTB = 0x00;
 	TimerOn();
-	TimerSet(10); 
+	TimerSet(1); 
 	render_state = init;
 	
 	while(1) {
@@ -148,21 +102,4 @@ int main(void) {
 	return 1;
 }
 
-
-int ROWS, COLUMNS;
-
-void MATRIX() {
-	 ROWS = 0;
-	 COLUMNS = 0;
-	for (ROWS = 0; ROWS < 3; ROWS++) {
-		for (COLUMNS = 0; COLUMNS < 3; COLUMNS++) {
-			PORTB = rowArray[ROWS];
-			PORTD = ~colArray[COLUMNS];
-			
-		}
-	
-	
-	}
-	
-}
 	

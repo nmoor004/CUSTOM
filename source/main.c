@@ -207,3 +207,8 @@ int main(void) {
     }
     return 1;
 }
+
+
+
+//NOTES TO SELF
+/* -Make sure to implement a getPos function for all states to create bit strings for each object
