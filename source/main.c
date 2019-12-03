@@ -395,9 +395,9 @@ int main(void) {
 			Player.y = -1;
 		}
 		bulletTick();
-		renderTick();
-		playerTick();
 		
+		playerTick();
+		renderTick();
 
 						
 
