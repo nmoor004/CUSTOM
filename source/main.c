@@ -1,59 +1,8 @@
-///////////////MATRIX SCHEMATICS
-
-
-
-
-///////////RIGHT INPUTS w/ luckylight label facing towards top of board portb
-//BIT 0 = ROW 1 
-//BIT 1 = ROW 2 
-//BIT 2 = COL 7 
-//BIT 3 = ROW 8 
-//BIT 4 = COL 5	
-//BIT 5 = ROW 3 
-//BIT 6 = COL 8 
-//BIT 7 = ROW 5 
-
-
-////////////LEFT INPUTS has label on side with Luckylight facing top of board portd
-//BIT 0 = COL 2
-//BIT 1 = ROW 7
-//BIT 2 = ROW 6
-//BIT 3 = COL 1
-//BIT 4 = ROW 4
-//BIT 5 = COL 3
-//BIT 6 = COL 6
-//BIT 7 =  COL 4
-
-
-//NEW WIRING SCHEME
-/* - ROWS (PORTB)
-   BIT 0 = ROW 1
-   BIT 1 = ROW 2
-   BIT 2 = ROW 3 (old bBIT 5)
-   BIT 3 = ROW 4 (old dBIT 4)
-   BIT 4 = ROW 5 (old bBIT 7)
-   BIT 5 = ROW 6 (old dBIT 2)
-   BIT 6 = ROW 7 (old dBIT 1)
-   BIT 7 = ROW 8 (old bBIT 3)
- 
-- COLS (PORTD) 
-   BIT 0 = COL 1 (old dBIT 3)
-   BIT 1 = COL 2 (old dBIT 0)
-   BIT 2 = COL 3 (old dBIT 5)
-   BIT 3 = COL 4 (old dBIT 7)
-   BIT 4 = COL 5 (old bBIT 4)
-   BIT 5 = COL 6 (old dBIT 6)
-   BIT 6 = COL 7 (old bBIT 2)
-   BIT 7 = COL 8 (old bBIT 6) */
-   
-   #include <avr/io.h>
+#include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
-
-
-
 
 
 
@@ -139,13 +88,17 @@ uint16_t readadc(uint8_t ch)
 void updateArrays();
 void updateBullets();
 void updatePlayer();
+void resetBullet(int);
 
 //VARS
 char rowArray[6] = {0}; // The 6th element of col/rows is reserved for the player. 
 char colArray[6] = {0};
 int score = 0;
 uint16_t x, y;
-
+int reset_Counter = 0;
+int lose = 0;
+int win = 0;
+int reset; //PIN A2
 
 
 
@@ -170,15 +123,24 @@ struct bullet {
 struct bullet bulletArray[5]; 
 
 
-enum Bullet_States {bullet_init, update} bullet_state;
-
+enum Bullet_States {bullet_init, update, bullet_wait} bullet_state;
+int binit;
 int bulletCounter = 0;
 void bulletTick() {
 		switch(bullet_state) {
 			case bullet_init:
+				updateArrays();
+				for (binit = 0; binit < 5; binit++) {
+					resetBullet(binit);
+				}
+			
 				bullet_state = update;
 				break;
 			case update:
+				if ((win == 1 ) || (lose == 1)) {
+					bullet_state = bullet_wait;
+					bulletCounter = 0;
+				}
 				if (bulletCounter == 1000) {
 					bulletCounter = 0;
 				updateArrays();
@@ -186,23 +148,25 @@ void bulletTick() {
 				}
 				bulletCounter++;
 				break;
-			
+			case bullet_wait:
+				if ((win == 0) && (lose == 0)) {
+									for (binit = 0; binit < 5; binit++) {
+										resetBullet(binit);
+									}
+					updateArrays();
+					bullet_state = update;	
+				}
+					
+				break;
 			
 		}
 		
-		switch(bullet_state) {
-			case bullet_init:
-				break;
-			case update:
-				break;
-			
-		}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////-----------PLAYER-----------///////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
-struct bullet Player = {4, 4, 0, 0, 0};
+struct bullet Player = {4, 4, 0, 0, 0}; // We only use Player.x/y 
 
 enum Player_States {player_init, player_idle, player_move, player_wait} player_state;
 enum Player_Directions {Up, Down, Left, Right, init} player_direction;
@@ -211,10 +175,14 @@ int player_count = 0;
 void playerTick() {
 	switch(player_state) {
 		case player_init: 
+				Player.x = 4;
+				Player.y = 4;
 				player_direction = init;
 				player_state = player_idle;
 			break;
 		case player_idle:
+
+			
 			if (x > 600) {
 				player_direction = Right;
 				player_state = player_move;
@@ -233,9 +201,16 @@ void playerTick() {
 				
 			}
 			updatePlayer();
+						if ((win == 1 )|| (lose == 1)) {
+							player_state = player_wait;
+						}
 
 			break;
 		case player_move:
+			if ((win == 1 )|| (lose == 1)) {
+				player_state = player_wait;
+				player_count = 0;
+			}
 			if (player_direction == Up) {
 				if (Player.y < 7) {
 					Player.y += 1;
@@ -258,18 +233,32 @@ void playerTick() {
 				}
 				
 			}
-			player_state = player_wait;
+					updatePlayer();
+			player_direction = init;
+			player_count++;
+			
+			if (player_count == 100) {
+				player_state = player_idle;
+				player_count = 0;
+			}
+			
 		
 			break;
 		case player_wait:
-			player_count++;
-					if (player_count == 100) {
+			if ((win == 0) && (lose == 0)) {
 						player_direction = init;
 						player_state = player_idle;
+						Player.x = 4;
+						Player.y = 4;
 						player_count = 0;
+						win = 0;
+			}	
+			
+			
 						
-						}
 			break;
+		
+		
 	}
 	
 	
@@ -285,7 +274,7 @@ void playerTick() {
 
 
 
-enum Render_States {render_init, draw} render_state;
+enum Render_States {render_init, draw, GAME_OVER, WINNER} render_state;
 
 int i = 0;
 
@@ -293,22 +282,78 @@ void renderTick() {
 	switch(render_state) {
 		case render_init:
 			render_state = draw;
+			i = 0;
 			break;
 		case draw: //Draw the board by getting data from bullets & player
-				
+				if (reset == 1) {
+					
+				}
+				if (lose == 1) {
+					render_state = GAME_OVER;
+				}
+				else if (win == 1) {
+					render_state = WINNER;
+				}
 				PORTB = rowArray[i];
 				PORTD = ~colArray[i];
 				i++;
 				if (i == 6) {
 					i = 0;
 				}
+								if (reset == 1) {
+									lose = 1;
+								}
 			break;
+		case GAME_OVER:
+			PORTB = 0xFF;
+			PORTD = 0x00;
+			score = 0;
+			lose = 0;
+			render_state = render_init;
+		
+			break;
+		case WINNER:
+			PORTB = 0xFF;
+			PORTD = 0x00;
+			lose = 0;
+			if (reset == 1) {
+				win = 0;
+				render_state = render_init;
+			}
+			
 			
 	}
 	
 	
 	
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 int main(void) {
 	DDRD = 0xFF; PORTD = 0x00; // MATRIX ROWS
@@ -320,14 +365,36 @@ int main(void) {
 	bullet_state = bullet_init;
 	render_state = render_init;
 	player_state = player_init;
-	
+	int w;
 	while(1) {
+		reset = ((~PINA & 0x04) >> 2);
 		x = readadc(1); //For some reason this is backwards, so 1 and 0 are switched
 		y = readadc(0);
+		if (score != 10) {
+			for (w = 0; w < 5; w++) {
+				if  ( (bulletArray[w].x == Player.x) && (bulletArray[w].y == Player.y) ) {
+					lose = 1;
+					Player.x = -1;
+					Player.y = -1;
+					
+					
+				}
+				
+			}
+		}
+		else if (score >= 10) {
+			win = 1;
+			score = 0;
+			Player.x = -1;
+			Player.y = -1;
+		}
 		bulletTick();
 		renderTick();
 		playerTick();
-	
+		
+
+						
+
 		while(!TimerFlag);
 		TimerFlag = 0;
 		
@@ -362,37 +429,41 @@ void updateBullets() {
 		}
 		
 		if ((bulletArray[b].x > 8) || (bulletArray[b].y > 8) || (bulletArray[b].x < 0) || (bulletArray[b].y < 0)) { //Respawn bullet
-			
 			score++;
-
-			bulletArray[b].direction = rand() % 4; 
-			if (bulletArray[b].direction == 0) { //UP     //Direction checks to make sure new bullets don't continue off screen based on their spawn point
-				bulletArray[b].startX = rand() % 8;
-				bulletArray[b].startY = 0;
-			}
-			else if (bulletArray[b].direction == 1) { //DOWN
-				bulletArray[b].startX = rand() % 8;
-				bulletArray[b].startY = 7;
-			}
-			else if (bulletArray[b].direction == 2) { //LEFT
-				bulletArray[b].startX = 7;
-				bulletArray[b].startY = rand() % 8;
-			}
-			else if (bulletArray[b].direction == 3) { //RIGHT
-				bulletArray[b].startX = 0;
-				bulletArray[b].startY = rand() % 8;
-			}
+			resetBullet(b);
 			
-						bulletArray[b].x = bulletArray[b].startX;
-						bulletArray[b].y = bulletArray[b].startY;
 		}
-			
 	}
 		
 		
 		
 }
 
+void resetBullet(int current_Bullet) {
+	
+	bulletArray[current_Bullet].direction = rand() % 4;
+	if (bulletArray[current_Bullet].direction == 0) { //UP     //Direction checks to make sure new bullets don't continue off screen based on their spawn point
+		bulletArray[current_Bullet].startX = rand() % 8;
+		bulletArray[current_Bullet].startY = 0;
+	}
+	else if (bulletArray[current_Bullet].direction == 1) { //DOWN
+		bulletArray[current_Bullet].startX = rand() % 8;
+		bulletArray[current_Bullet].startY = 7;
+	}
+	else if (bulletArray[current_Bullet].direction == 2) { //LEFT
+		bulletArray[current_Bullet].startX = 7;
+		bulletArray[current_Bullet].startY = rand() % 8;
+	}
+	else if (bulletArray[current_Bullet].direction == 3) { //RIGHT
+		bulletArray[current_Bullet].startX = 0;
+		bulletArray[current_Bullet].startY = rand() % 8;
+	}
+	
+	bulletArray[current_Bullet].x = bulletArray[current_Bullet].startX;
+	bulletArray[current_Bullet].y = bulletArray[current_Bullet].startY;
+
+	
+}
 
 void updatePlayer() {
 	
@@ -416,7 +487,6 @@ void updateArrays() {
 	
 	
 }
-   
-   
-   
-   
+
+
+
