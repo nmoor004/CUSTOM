@@ -1,8 +1,25 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <stdio.h>
+#include <time.h>
+#include <stdlib.h>
 
 
-void MATRIX();
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+ ////////////////////////////////-----------GLOBAL-----------///////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+
+//FUNCS
+void updateArrays();
+void updateBullets();
+
+//VARS
+char rowArray[6] = {0}; // The 6th element of col/rows is reserved for the player. 
+char colArray[6] = {0};
+
+
+
 
 
   /////////////////////////////////////////////////////////////////////////////////////////
@@ -60,66 +77,76 @@ void TimerSet(unsigned long M) {
 
 
 
-/*
+
 
 struct bullet {
 	char x; //X & Y start from 0 for array access
 	char y;
-	char start;
+	char startX;
+	char startY;
 	char direction; // 0 up, 1 down, 2 left, 3 right
 
 };
 
-bullet A;
 
-bullet bulletArray[1] = {A};
+//struct bullet A = {1, 1, 0, 0, 0};
 
-int bulletCount = 0;
-enum Bullet_States {idle, move} bullet_state;
+struct bullet bulletArray[5];
 
 
+enum Bullet_States {bullet_init, update} bullet_state;
 
+int bulletCounter = 0;
 void bulletTick() {
 		switch(bullet_state) {
-			case idle:
+			case bullet_init:
+				bullet_state = update;
 				break;
-			case move:
+			case update:
+				if (bulletCounter == 1000) {
+					bulletCounter = 0;
+				updateArrays();
+				updateBullets();
+				}
+				bulletCounter++;
 				break;
 			
 			
 		}
 		
 		switch(bullet_state) {
-			case idle:
+			case bullet_init:
 				break;
-			case move:
+			case update:
 				break;
 			
 		}
 }
 
-*/
 
 
 
 
-enum Render_States {init, draw} render_state;
-char rowArray[6] = {0b00000001, 0b00000010, 0b00000100}; //0b00100000, 0b00010000, 0b00001000, 0b00000100}; 
-char colArray[6] = {0b00000001, 0b00000001, 0b00000001}; //0b00100000, 0b00010000, 0b00001000, 0b00000100};
 
+enum Render_States {render_init, draw} render_state;
+
+int i = 0;
 
 void renderTick() {
 	switch(render_state) {
-		case init:
+		case render_init:
 			render_state = draw;
 			break;
 		case draw: //Draw the board by getting data from bullets & player
-				MATRIX();
 				
-			
+				PORTB = rowArray[i];
+				PORTD = ~colArray[i];
+				i++;
+				if (i == 6) {
+					i = 0;
+				}
 			break;
-		
-		
+			
 	}
 	
 	
@@ -130,10 +157,12 @@ int main(void) {
 	DDRD = 0xFF; PORTD = 0x00;
 	DDRB = 0xFF; PORTB = 0x00;
 	TimerOn();
-	TimerSet(10); 
-	render_state = init;
+	TimerSet(1); 
+	bullet_state = bullet_init;
+	render_state = render_init;
 	
 	while(1) {
+		bulletTick();
 		renderTick();
 	
 		while(!TimerFlag);
@@ -149,20 +178,68 @@ int main(void) {
 }
 
 
-int ROWS, COLUMNS;
-
-void MATRIX() {
-	 ROWS = 0;
-	 COLUMNS = 0;
-	for (ROWS = 0; ROWS < 3; ROWS++) {
-		for (COLUMNS = 0; COLUMNS < 3; COLUMNS++) {
-			PORTB = rowArray[ROWS];
-			PORTD = ~colArray[COLUMNS];
+void updateBullets() {
+	int b = 0;
+	int bDirection;
+	for (b = 0; b < 5; b++) {
+		bDirection = bulletArray[b].direction;
+		
+		if (bDirection == 0) {
+			bulletArray[b].y += 1;
 			
 		}
-	
-	
+		else if (bDirection == 1) {
+			bulletArray[b].y -= 1;
+		}
+		else if (bDirection == 2) {
+			bulletArray[b].x -=1;
+		} 
+		else if (bDirection == 3) {
+			bulletArray[b].x +=1;
+		}
+		
+		if ((bulletArray[b].x > 8) || (bulletArray[b].y > 8) || (bulletArray[b].x < 0) || (bulletArray[b].y < 0)) { //Respawn bullet
+			
+			
+
+			bulletArray[b].direction = rand() % 4; 
+			if (bulletArray[b].direction == 0) { //UP     //Direction checks to make sure new bullets don't continue off screen based on their spawn point
+				bulletArray[b].startX = rand() % 8;
+				bulletArray[b].startY = 0;
+			}
+			else if (bulletArray[b].direction == 1) { //DOWN
+				bulletArray[b].startX = rand() % 8;
+				bulletArray[b].startY = 7;
+			}
+			else if (bulletArray[b].direction == 2) { //LEFT
+				bulletArray[b].startX = 7;
+				bulletArray[b].startY = rand() % 8;
+			}
+			else if (bulletArray[b].direction == 3) { //RIGHT
+				bulletArray[b].startX = 0;
+				bulletArray[b].startY = rand() % 8;
+			}
+			
+						bulletArray[b].x = bulletArray[b].startX;
+						bulletArray[b].y = bulletArray[b].startY;
+		}
+			
 	}
-	
+		
+		
+		
 }
 	
+
+
+void updateArrays() {
+	int j = 0;
+	for (j = 0; j < 5; j++) { //We only update the first 5 elements of the row/colArrays since element 6 is handled by updatePlayer
+		int posX = bulletArray[j].x;
+		int posY = bulletArray[j].y;
+		
+		rowArray[j] = 0b00000001 << (posX);
+		colArray[j] = 0b00000001 << (posY);
+	
+	}
+}
