@@ -89,6 +89,7 @@ void updateArrays();
 void updateBullets();
 void updatePlayer();
 void resetBullet(int);
+void checkScore();
 
 //VARS
 char rowArray[6] = {0}; // The 6th element of col/rows is reserved for the player. 
@@ -359,6 +360,7 @@ int main(void) {
 	DDRD = 0xFF; PORTD = 0x00; // MATRIX ROWS
 	DDRB = 0xFF; PORTB = 0x00; // MATRIX COLUMNS
 	DDRA = 0x00; PORTA = 0xFF; // JOYSTICK INPUT
+	DDRC = 0xFF; PORTC = 0x00; //SCOREBOARD 7SEG
 	TimerOn();
 	TimerSet(1); 
 	InitADC();
@@ -370,7 +372,11 @@ int main(void) {
 		reset = ((~PINA & 0x04) >> 2);
 		x = readadc(1); //For some reason this is backwards, so 1 and 0 are switched
 		y = readadc(0);
-		if (score != 10) {
+		
+		checkScore();
+		
+		
+		if (score != 40) {
 			for (w = 0; w < 5; w++) {
 				if  ( (bulletArray[w].x == Player.x) && (bulletArray[w].y == Player.y) ) {
 					lose = 1;
@@ -488,5 +494,19 @@ void updateArrays() {
 	
 }
 
-
+void checkScore() {
+	if (score < 10) {
+		PORTC = 0x00;
+	}
+	else if (score < 20) {
+		PORTC = 0x01;
+	}
+	else if (score < 30) {
+		PORTC = 0x02;
+	}
+	else if (score <= 40) {
+			PORTC = 0x04;
+	}
+	
+}
 
