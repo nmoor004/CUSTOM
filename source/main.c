@@ -46,7 +46,6 @@
    BIT 6 = COL 7 (old bBIT 2)
    BIT 7 = COL 8 (old bBIT 6) */
    
-   
    #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdio.h>
@@ -253,7 +252,7 @@ void playerTick() {
 					Player.x -= 1;
 				}
 			}
-			else if (Player.direction == Right) {
+			else if (player_direction == Right) {
 				if (Player.x < 7) {
 					Player.x += 1;
 				}
